@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) app with a JWT-based auth system:
+register, login, logout, a public landing page, and a protected dashboard —
+backed by Postgres, bcrypt-hashed passwords, and JWT sessions in httpOnly
+cookies.
 
 ## Getting Started
 
-First, run the development server:
+**👉 Read [`SETUP.md`](SETUP.md) first** — it walks through the database setup
+(what to create, where your DB password goes), the environment variables, and a
+full explanation of how the auth flow works.
+
+Quick version:
 
 ```bash
+# 1. Create the database and table (see SETUP.md for details)
+psql -U postgres -c "CREATE DATABASE acme;"
+psql -U postgres -d acme -f db/schema.sql
+
+# 2. Configure credentials
+cp .env.example .env.local   # then edit DATABASE_URL and JWT_SECRET
+
+# 3. Install and run
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project layout
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `db/schema.sql` — the `users` table
+- `lib/` — database pool, user queries, JWT, password hashing, session helpers
+- `app/api/auth/{register,login,logout}/route.ts` — the auth API endpoints
+- `proxy.ts` — optimistic route protection (Next.js 16's renamed middleware)
+- `app/page.tsx`, `app/login`, `app/register`, `app/dashboard` — the pages
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Documentation](https://nextjs.org/docs)
+- The bundled, version-accurate docs in `node_modules/next/dist/docs/`
