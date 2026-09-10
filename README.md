@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mini Blog
 
-## Getting Started
+Prosty, ale profesjonalny system logowania i publikowania postów zbudowany na
+**Next.js (App Router)**, **PostgreSQL** i **JWT** (sesja w cookie httpOnly).
 
-First, run the development server:
+## Funkcje
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Rejestracja i logowanie (hasła hashowane przez `bcryptjs`).
+- Sesja oparta na podpisanym tokenie JWT (`jose`) trzymanym w bezpiecznym,
+  `httpOnly` cookie.
+- Publikowanie własnych postów przez zalogowanych użytkowników (Server Actions).
+- Publiczny feed najnowszych postów oraz panel z własnymi postami.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Stos i architektura
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Warstwa            | Rozwiązanie                                              |
+| ------------------ | ------------------------------------------------------- |
+| Baza danych        | PostgreSQL (`pg`, surowe zapytania SQL)                 |
+| Sesja / auth       | JWT (`jose`) + cookie `httpOnly`                        |
+| Hasła              | `bcryptjs`                                               |
+| Logika serwerowa   | Server Actions + Data Access Layer (`app/lib/dal.ts`)   |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Kluczowe pliki:
 
-## Learn More
+- `app/lib/db.ts` – pula połączeń Postgres.
+- `app/lib/session.ts` – szyfrowanie/odszyfrowanie i zarządzanie sesją.
+- `app/lib/dal.ts` – weryfikacja sesji (`verifySession`, `getCurrentUser`).
+- `app/actions/auth.ts` – rejestracja, logowanie, wylogowanie.
+- `app/actions/posts.ts` – dodawanie postów.
+- `db/schema.sql` – schemat bazy.
 
-To learn more about Next.js, take a look at the following resources:
+## Uruchomienie
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Zainstaluj zależności:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   npm install
+   ```
 
-## Deploy on Vercel
+2. Skonfiguruj środowisko – skopiuj `.env.example` do `.env.local` i uzupełnij:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   cp .env.example .env.local
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   - `DATABASE_URL` – połączenie do Postgresa.
+   - `SESSION_SECRET` – długi losowy sekret (np. `openssl rand -base64 32`).
+
+3. Utwórz schemat bazy danych:
+
+   ```bash
+   npm run db:init
+   ```
+
+4. Uruchom serwer deweloperski:
+
+   ```bash
+   npm run dev
+   ```
+
+Aplikacja będzie dostępna pod `http://localhost:3000`.
+
+## Bezpieczeństwo
+
+- Autoryzacja jest sprawdzana wewnątrz każdej Server Action (nie tylko w UI).
+- Cookie sesji jest `httpOnly`, `sameSite=lax` oraz `secure` w produkcji.
+- W tokenie JWT trzymane jest tylko `userId` – bez danych wrażliwych.
